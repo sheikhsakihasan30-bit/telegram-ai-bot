@@ -2,8 +2,8 @@ import os
 import telebot
 import google.generativeai as genai
 
-TOKEN = os.environ.get("TELEGRAM_BOT_TOKEN", "PASTE_YOUR_TELEGRAM_TOKEN_HERE")
-GEMINI_API_KEY = os.environ.get("GEMINI_API_KEY", "PASTE_YOUR_GEMINI_KEY_HERE")
+TOKEN = os.environ.get("8856458972:AAFHuTmDM0TtvM21J1-KhEse3m71nIf8LG8", "8345712050")
+GEMINI_API_KEY = os.environ.get("GEMINI_API_KEY", "AIzaSyD_S9lsn1ULXCuqs2yyjpNxlbKq2DU9QOo")
 
 genai.configure(api_key=GEMINI_API_KEY)
 model = genai.GenerativeModel("gemini-1.5-flash")
