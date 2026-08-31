@@ -4,7 +4,7 @@ from flask import Flask, request
 import google.generativeai as genai
 
 # আপনার ক্রেন্ডেনশিয়াল এবং অ্যাডমিন আইডি
-TOKEN = "8856458972:AAGMMiT1W7z18lYLgJBZrKJk9jMMDMz0nfg"
+TOKEN = "8852512631:AAHOKThsAL20YzyLRpN-LaJb_C8RWysw5sc"
 GEMINI_API_KEY = os.environ.get("GEMINI_API_KEY", "AIzaSyD_S91sn1ULXCuqs2yyjpNxLbKq2DU9QOo")
 ADMIN_ID = 8345712050  # আপনার নির্দিষ্ট টেলিগ্রাম আইডি
 
