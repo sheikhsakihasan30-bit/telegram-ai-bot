@@ -81,12 +81,8 @@ def getMessage():
     return "!", 200
 
 @server.route("/")
-def webhook():
-    bot.remove_webhook()
-    # Render-এর লাইভ ডোমেন লিংক এখানে অটো সেট হবে অথবা ম্যানুয়ালি দিতে পারেন
-    render_url = f"https://telegram-ai-bot-397z.onrender.com/{TOKEN}"
-    bot.set_webhook(url=render_url)
-    return "Webhook setup successful!", 200
+def index():
+    return "Bot is running smoothly!", 200
 
 if __name__ == "__main__":
     server.run(host="0.0.0.0", port=int(os.environ.get('PORT', 5000)))
