@@ -1,20 +1,21 @@
 import os
 import telebot
+from flask import Flask, request
 import google.generativeai as genai
 
-# আপনার ক্রেডেনশিয়াল এবং অ্যাডমিন আইডি
-TOKEN = "8856458972:AAGMMiTlW7z18lyLgjBZrKJk9jMMDMz0nfg"
-GEMINI_API_KEY = os.environ.get("GEMINI_API_KEY", "AIzaSyD_S9lsn1ULXCuqs2yyjpNxlbKq2DU9QOo")
+# আপনার ক্রেন্ডেনশিয়াল এবং অ্যাডমিন আইডি
+TOKEN = "8856458972:AAGMMiT1W7z18lYLgJBZrKJk9jMMDMz0nfg"
+GEMINI_API_KEY = os.environ.get("GEMINI_API_KEY", "AIzaSyD_S91sn1ULXCuqs2yyjpNxLbKq2DU9QOo")
 ADMIN_ID = 8345712050  # আপনার নির্দিষ্ট টেলিগ্রাম আইডি
 
 genai.configure(api_key=GEMINI_API_KEY)
-# চ্যাট হিস্ট্রি বা কনটেক্সট মেমোরি বজায় রাখার জন্য GenerativeModel-এর পরিবর্তে chat session ব্যবহার করা ভালো
 model = genai.GenerativeModel("gemini-1.5-flash")
 
 bot = telebot.TeleBot(TOKEN)
+server = Flask(__name__)
 
 # বটের কন্ট্রোল স্ট্যাটাস ভেরিয়েবল
-bot_active = True  # বট অন বা অফ রাখার জন্য
+bot_active = True 
 user_chat_sessions = {} # ইউজারের সাথে কনভার্সেশন হিস্ট্রি ধরে রাখার ডিকশনারি
 
 @bot.message_handler(commands=['admin'])
@@ -24,59 +25,68 @@ def admin_panel(message):
         return
     
     markup = telebot.types.InlineKeyboardMarkup()
-    btn_on = telebot.types.InlineKeyboardButton("🟢 বট চালু করুন", callback_data="bot_on")
-    btn_off = telebot.types.InlineKeyboardButton("🔴 বট বন্ধ রাখুন", callback_data="bot_off")
-    markup.add(btn_on, btn_off)
-    
-    status_text = "সচল (Active)" if bot_active else "বন্ধ (Paused)"
-    bot.reply_to(message, f"⚙️ **পার্সোনাল অ্যাডমিন কন্ট্রোল প্যানেল**\n\nবটের বর্তমান অবস্থা: *{status_text}*\nনিচের বাটন থেকে নিয়ন্ত্রণ করুন:", parse_mode="Markdown", reply_markup=markup)
+    btn_status = telebot.types.InlineKeyboardButton(
+        f"🤖 Bot: {'ON ✅' if bot_active else 'OFF ❌'}", 
+        callback_data="toggle_bot"
+    )
+    markup.add(btn_status)
+    bot.send_message(message.chat.id, "অ্যাডমিন কন্ট্রোল প্যানেল:", reply_markup=markup)
 
-@bot.callback_query_handler(func=lambda call: True)
-def callback_query(call):
+@bot.callback_query_handler(func=lambda call: call.data == "toggle_bot")
+def toggle_bot_callback(call):
     global bot_active
     if call.from_user.id != ADMIN_ID:
-        bot.answer_callback_query(call.id, "আপনার অনুমতি নেই!")
+        bot.answer_callback_query(call.id, "আপনার অনুমতি নেই!", show_alert=True)
         return
     
-    if call.data == "bot_on":
-        bot_active = True
-        bot.edit_message_text("🟢 বট সফলভাবে চালু করা হয়েছে!", call.message.chat.id, call.message.message_id)
-    elif call.data == "bot_off":
-        bot_active = False
-        bot.edit_message_text("🔴 বট সাময়িকভাবে বন্ধ রাখা হয়েছে।", call.message.chat.id, call.message.message_id)
+    bot_active = not bot_active
+    status_text = "ON ✅" if bot_active else "OFF ❌"
+    
+    markup = telebot.types.InlineKeyboardMarkup()
+    markup.add(telebot.types.InlineKeyboardButton(f"🤖 Bot: {status_text}", callback_data="toggle_bot"))
+    
+    bot.edit_message_reply_markup(
+        chat_id=call.message.chat.id, 
+        message_id=call.message.message_id, 
+        reply_markup=markup
+    )
+    bot.answer_callback_query(call.id, f"বটের স্ট্যাটাস পরিবর্তন করে করা হয়েছে: {status_text}")
 
 @bot.message_handler(func=lambda message: True)
 def handle_message(message):
     global bot_active
-    
-    # বট বন্ধ থাকলে কোনো কাজ করবে না
-    if not bot_active:
-        return  
-        
-    # আপনি নিজে যদি চ্যাটে কথা বলেন বা কোনো কমান্ড দেন, তবে বট আপনার মেসেজে নিজে থেকে এআই রিপ্লাই দিয়ে ডিস্টার্ব করবে না
-    if message.from_user.id == ADMIN_ID:
-        if message.text and message.text.startswith("/"):
-            return # কমান্ড হলে স্কিপ করবে
-        # আপনি নিজে একটিভ থাকলে বট সাইলেন্ট থাকবে (অটো রেসপন্স সাপ্রেশন)
-        return
+    if not bot_active and message.from_user.id != ADMIN_ID:
+        return  # বট অফ থাকলে এবং ইউজার অ্যাডমিন না হলে মেসেজ ইগ্নোর করবে
 
     user_id = message.from_user.id
-    user_message = message.text
-
-    if not user_message:
-        return
+    user_text = message.text
 
     try:
-        # প্রতিটা ইউজারের জন্য আলাদা চ্যাট সেশন বা মেমোরি তৈরি করা যাতে আগের কথা মনে রাখতে পারে
+        # ইউজার সেশন মেমোরি হ্যান্ডেলিং
         if user_id not in user_chat_sessions:
             user_chat_sessions[user_id] = model.start_chat(history=[])
         
-        chat_session = user_chat_sessions[user_id]
-        response = chat_session.send_message(user_message)
-        
+        chat = user_chat_sessions[user_id]
+        response = chat.send_message(user_text)
         bot.reply_to(message, response.text)
     except Exception as e:
-        bot.reply_to(message, "দুঃখিত, এই মুহূর্তে উত্তর দিতে পারছি না।")
+        bot.reply_to(message, f"দুঃখিত, একটি সমস্যা হয়েছে: {str(e)}")
 
-print("পার্সোনাল অ্যাসিস্ট্যান্ট বট অ্যাডমিন প্যানেল ও মেমোরিসহ সচল রয়েছে...")
-bot.infinity_polling()
+# Webhook রুট (Render-এর জন্য)
+@server.route(f'/{TOKEN}', methods=['POST'])
+def getMessage():
+    json_string = request.get_data().decode('utf-8')
+    update = telebot.types.Update.de_json(json_string)
+    bot.process_new_updates([update])
+    return "!", 200
+
+@server.route("/")
+def webhook():
+    bot.remove_webhook()
+    # Render-এর লাইভ ডোমেন লিংক এখানে অটো সেট হবে অথবা ম্যানুয়ালি দিতে পারেন
+    render_url = f"https://telegram-ai-bot-397z.onrender.com/{TOKEN}"
+    bot.set_webhook(url=render_url)
+    return "Webhook setup successful!", 200
+
+if __name__ == "__main__":
+    server.run(host="0.0.0.0", port=int(os.environ.get('PORT', 5000)))
