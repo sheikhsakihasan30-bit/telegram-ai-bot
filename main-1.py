@@ -4,7 +4,7 @@ from flask import Flask, request
 import google.generativeai as genai
 import threading
 
-TOKEN = "8628230178:AAEcNxgYiefzMb59Q03WnRbp2rmzigELd2M"
+TOKEN = "8628230178:AAGfzaIXjypbb8bk0Vog69lSwi8_7YO5VSs"
 GOOGLE_API_KEY = os.environ.get("GOOGLE_API_KEY")
 ADMIN_ID = 8345712050
 
@@ -93,7 +93,7 @@ def send_broadcast(message):
 
     bot.send_message(ADMIN_ID, f"✅ ব্রডকাস্ট সম্পন্ন!\nসফল: {success_count} জন\nব্যর্থ: {fail_count} জন")
 
-# টেলিগ্রাম বিজনেস মেসেজ হ্যান্ডলার
+# টেলিগ্রাম বিজনেস মেসেজ হ্যান্ডলার (এখানে business_connection_id যুক্ত করা হয়েছে)
 @bot.business_message_handler(func=lambda message: True)
 def handle_business_message(message):
     global bot_active
@@ -116,8 +116,12 @@ def handle_business_message(message):
         chat = user_chat_sessions[user_id]
         response = chat.send_message(user_text)
         
-        # বিজনেসের চ্যাটে এআই রেসপন্স পাঠানো
-        bot.send_message(message.chat.id, response.text)
+        # বিজনেসের মাধ্যমে চ্যাটে উত্তর পাঠানোর সময় business_connection_id অবশ্যই লাগবে
+        bot.send_message(
+            chat_id=message.chat.id, 
+            text=response.text, 
+            business_connection_id=message.business_connection_id
+        )
     except Exception as e:
         print(f"Business AI Error: {e}")
 
