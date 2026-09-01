@@ -1,22 +1,18 @@
 import os
 import telebot
-from flask import Flask, request
 import google.generativeai as genai
 
-# আপনার আপডেট করা টেলিগ্রাম টোকেন এবং জেমিনি এপিআই কি
 TOKEN = "8852512631:AAHOKThsAL20YzyLRpN-LaJb_C8RWysw5sc"
-GEMINI_API_KEY = "AQ.Ab8RN6JaDcD70BZD4LKIBkjrNpx7fYlBQ9cW-rA7eyymO_oOMQ"
-ADMIN_ID = 8345712050  # আপনার নির্দিষ্ট টেলিগ্রাম আইডি
+GEMINI_API_KEY = os.environ.get("GEMINI_API_KEY")
+ADMIN_ID = 8345712050
 
 genai.configure(api_key=GEMINI_API_KEY)
 model = genai.GenerativeModel("gemini-1.5-flash")
 
 bot = telebot.TeleBot(TOKEN)
-server = Flask(__name__)
 
-# বটের কন্ট্রোল স্ট্যাটাস ভেরিয়েবল
 bot_active = True 
-user_chat_sessions = {} # ইউজারের সাথে কনভার্সেশন হিস্ট্রি ধরে রাখার ডিকশনারি
+user_chat_sessions = {}
 
 @bot.message_handler(commands=['admin'])
 def admin_panel(message):
@@ -56,13 +52,12 @@ def toggle_bot_callback(call):
 def handle_message(message):
     global bot_active
     if not bot_active and message.from_user.id != ADMIN_ID:
-        return  # বট অফ থাকলে এবং ইউজার অ্যাডমিন না হলে মেসেজ ইগ্নোর করবে
+        return
 
     user_id = message.from_user.id
     user_text = message.text
 
     try:
-        # ইউজার সেশন মেমোরি হ্যান্ডেলিং
         if user_id not in user_chat_sessions:
             user_chat_sessions[user_id] = model.start_chat(history=[])
         
@@ -72,17 +67,6 @@ def handle_message(message):
     except Exception as e:
         bot.reply_to(message, f"দুঃখিত, একটি সমস্যা হয়েছে: {str(e)}")
 
-# Webhook রুট (Render-এর জন্য)
-@server.route(f'/{TOKEN}', methods=['POST'])
-def getMessage():
-    json_string = request.get_data().decode('utf-8')
-    update = telebot.types.Update.de_json(json_string)
-    bot.process_new_updates([update])
-    return "!", 200
-
-@server.route("/")
-def index():
-    return "Bot is running smoothly!", 200
-
 if __name__ == "__main__":
-    server.run(host="0.0.0.0", port=int(os.environ.get('PORT', 5000)))
+    print("Bot is running in polling mode...")
+    bot.infinity_polling()
