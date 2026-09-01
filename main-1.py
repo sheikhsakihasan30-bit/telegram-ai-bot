@@ -4,10 +4,10 @@ from flask import Flask, request
 import google.generativeai as genai
 
 TOKEN = "8956007602:AAFcjQHyoBbI5myr29af2m36KS9bZk0Ev_g"
-GEMINI_API_KEY = os.environ.get("GEMINI_API_KEY")
+GOOGLE_API_KEY = os.environ.get("GOOGLE_API_KEY")
 ADMIN_ID = 8345712050
 
-genai.configure(api_key=GEMINI_API_KEY)
+genai.configure(api_key=GOOGLE_API_KEY)
 model = genai.GenerativeModel("gemini-1.5-flash")
 
 bot = telebot.TeleBot(TOKEN)
@@ -21,7 +21,7 @@ def admin_panel(message):
     if message.from_user.id != ADMIN_ID:
         bot.reply_to(message, "দুঃখিত, এই কমান্ডটি শুধুমাত্র আপনার (অ্যাডমিনের) জন্য নির্ধারিত।")
         return
-    
+
     markup = telebot.types.InlineKeyboardMarkup()
     btn_status = telebot.types.InlineKeyboardButton(
         f"🤖 Bot: {'ON ✅' if bot_active else 'OFF ❌'}", 
@@ -36,13 +36,13 @@ def toggle_bot_callback(call):
     if call.from_user.id != ADMIN_ID:
         bot.answer_callback_query(call.id, "আপনার অনুমতি নেই!", show_alert=True)
         return
-    
+
     bot_active = not bot_active
     status_text = "ON ✅" if bot_active else "OFF ❌"
-    
+
     markup = telebot.types.InlineKeyboardMarkup()
     markup.add(telebot.types.InlineKeyboardButton(f"🤖 Bot: {status_text}", callback_data="toggle_bot"))
-    
+
     bot.edit_message_reply_markup(
         chat_id=call.message.chat.id, 
         message_id=call.message.message_id, 
@@ -62,7 +62,7 @@ def handle_message(message):
     try:
         if user_id not in user_chat_sessions:
             user_chat_sessions[user_id] = model.start_chat(history=[])
-        
+
         chat = user_chat_sessions[user_id]
         response = chat.send_message(user_text)
         bot.reply_to(message, response.text)
@@ -85,5 +85,5 @@ if __name__ == "__main__":
     bot_thread = threading.Thread(target=run_bot)
     bot_thread.daemon = True
     bot_thread.start()
-    
+
     server.run(host="0.0.0.0", port=int(os.environ.get('PORT', 5000)))
