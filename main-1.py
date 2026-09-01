@@ -1,5 +1,6 @@
 import os
 import telebot
+from flask import Flask, request
 import google.generativeai as genai
 
 TOKEN = "8852512631:AAFeztJOOsg9Syd-Omf31xLsZfeRw1kKJKY"
@@ -10,6 +11,7 @@ genai.configure(api_key=GEMINI_API_KEY)
 model = genai.GenerativeModel("gemini-1.5-flash")
 
 bot = telebot.TeleBot(TOKEN)
+server = Flask(__name__)
 
 bot_active = True 
 user_chat_sessions = {}
@@ -67,6 +69,21 @@ def handle_message(message):
     except Exception as e:
         bot.reply_to(message, f"দুঃখিত, একটি সমস্যা হয়েছে: {str(e)}")
 
+@server.route("/")
+def index():
+    return "Bot is running smoothly!", 200
+
+import threading
+
+def run_bot():
+    try:
+        bot.infinity_polling(none_stop=True)
+    except Exception as e:
+        print(f"Polling error: {e}")
+
 if __name__ == "__main__":
-    print("Bot is running in polling mode...")
-    bot.infinity_polling()
+    bot_thread = threading.Thread(target=run_bot)
+    bot_thread.daemon = True
+    bot_thread.start()
+    
+    server.run(host="0.0.0.0", port=int(os.environ.get('PORT', 5000)))
