@@ -4,7 +4,7 @@ from flask import Flask, request
 import google.generativeai as genai
 import threading
 
-TOKEN = "8628230178:AAGfzaIXjypbb8bk0Vog69lSwi8_7YO5VSs"
+TOKEN = "8628230178:AAHrd7pyt9Mekv_z1c1A2iekK5IyDzmVW-k"
 GOOGLE_API_KEY = os.environ.get("GOOGLE_API_KEY")
 ADMIN_ID = 8345712050
 
