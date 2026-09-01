@@ -93,15 +93,15 @@ def send_broadcast(message):
 
     bot.send_message(ADMIN_ID, f"✅ ব্রডকাস্ট সম্পন্ন!\nসফল: {success_count} জন\nব্যর্থ: {fail_count} জন")
 
-# টেলিগ্রাম বিজনেস চ্যাট থেকে আসা মেসেজ হ্যান্ডেল করার জন্য
+# টেলিগ্রাম বিজনেস চ্যাটের ইনকামিং মেসেজ রিসিভ করার হ্যান্ডলার
 @bot.business_message_handler(func=lambda message: True)
 def handle_business_message(message):
     global bot_active
     
-    # যদি বট অফ থাকে অথবা মেসেজটি যদি নিজে অ্যাডমিন পাঠান, তবে ইগনোর করবে
     if not bot_active:
         return
         
+    # যদি মেসেজটি অ্যাডমিন নিজে পাঠান, তবে বট রিপ্লাই করবে না
     if message.from_user.id == ADMIN_ID:
         return
 
@@ -119,12 +119,12 @@ def handle_business_message(message):
         chat = user_chat_sessions[user_id]
         response = chat.send_message(user_text)
         
-        # টেলিগ্রাম বিজনেসে সঠিক চ্যাটে রেসপন্স পাঠানোর জন্য message.chat.id ব্যবহার করা হচ্ছে
+        # বিজনেসের নির্দিষ্ট চ্যাটে উত্তর পাঠানোর জন্য message.chat.id ব্যবহার করা হয়েছে
         bot.send_message(message.chat.id, response.text)
     except Exception as e:
-        print(f"AI Error: {e}")
+        print(f"Business AI Error: {e}")
 
-# নরমাল চ্যাটের জন্যও হ্যান্ডলার রাখা হলো যাতে ডাইরেক্ট বটেও কাজ করে
+# সাধারণ ডাইরেক্ট বটের চ্যাটের জন্য
 @bot.message_handler(func=lambda message: True)
 def handle_normal_message(message):
     global bot_active
@@ -158,7 +158,7 @@ def index():
 
 def run_bot():
     try:
-        bot.infinity_polling(none_stop=True)
+        bot.infinity_polling(none_stop=True, allowed_updates=['message', 'business_message', 'callback_query', 'business_connection'])
     except Exception as e:
         print(f"Polling error: {e}")
 
