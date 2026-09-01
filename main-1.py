@@ -8,7 +8,8 @@ GOOGLE_API_KEY = os.environ.get("GOOGLE_API_KEY")
 ADMIN_ID = 8345712050
 
 genai.configure(api_key=GOOGLE_API_KEY)
-model = genai.GenerativeModel("gemini-1.5-flash")
+model = genai.GenerativeModel("gemini-1.5-flash-latest")
+
 
 bot = telebot.TeleBot(TOKEN)
 server = Flask(__name__)
