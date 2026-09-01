@@ -2,9 +2,8 @@ import os
 import telebot
 from flask import Flask, request
 import google.generativeai as genai
-import threading
 
-TOKEN = "8628230178:AAHrd7pyt9Mekv_z1c1A2iekK5IyDzmVW-k"
+TOKEN = "8628230178:AAFgYbbGxdQZiIbQBPBkcunBTlIcpqFPfHQ"
 GOOGLE_API_KEY = os.environ.get("GOOGLE_API_KEY")
 ADMIN_ID = 8345712050
 
@@ -37,11 +36,11 @@ def admin_panel(message):
         "📢 Broadcast Message", 
         callback_data="broadcast_prompt"
     )
-    
+
     markup.add(btn_status)
     markup.add(btn_stats)
     markup.add(btn_broadcast)
-    
+
     bot.send_message(message.chat.id, "👑 অ্যাডমিন কন্ট্রোল প্যানেল:", reply_markup=markup)
 
 @bot.callback_query_handler(func=lambda call: call.data in ["toggle_bot", "stats_users", "broadcast_prompt"])
@@ -77,7 +76,7 @@ def admin_callbacks(call):
 def send_broadcast(message):
     if message.from_user.id != ADMIN_ID:
         return
-    
+
     broadcast_text = message.text
     success_count = 0
     fail_count = 0
@@ -93,11 +92,11 @@ def send_broadcast(message):
 
     bot.send_message(ADMIN_ID, f"✅ ব্রডকাস্ট সম্পন্ন!\nসফল: {success_count} জন\nব্যর্থ: {fail_count} জন")
 
-# টেলিগ্রাম বিজনেস মেসেজ হ্যান্ডলার (এখানে business_connection_id যুক্ত করা হয়েছে)
+# টেলিগ্রাম বিজনেস মেসেজ হ্যান্ডলার
 @bot.business_message_handler(func=lambda message: True)
 def handle_business_message(message):
     global bot_active
-    
+
     if not bot_active:
         return
 
@@ -115,8 +114,7 @@ def handle_business_message(message):
 
         chat = user_chat_sessions[user_id]
         response = chat.send_message(user_text)
-        
-        # বিজনেসের মাধ্যমে চ্যাটে উত্তর পাঠানোর সময় business_connection_id অবশ্যই লাগবে
+
         bot.send_message(
             chat_id=message.chat.id, 
             text=response.text, 
@@ -129,7 +127,7 @@ def handle_business_message(message):
 @bot.message_handler(func=lambda message: True)
 def handle_normal_message(message):
     global bot_active
-    
+
     if not bot_active:
         return
 
@@ -151,19 +149,28 @@ def handle_normal_message(message):
     except Exception as e:
         print(f"Normal Error: {e}")
 
+# ফ্লাস্কের মাধ্যমে ওয়েব হুক রাউট সেটআপ
+@server.route(f"/{TOKEN}", methods=["POST"])
+def redirect_webhook():
+    if request.headers.get('content-type') == 'application/json':
+        json_string = request.get_data().decode('utf-8')
+        update = telebot.types.Update.de_json(json_string)
+        bot.process_new_updates([update])
+        return "", 200
+    else:
+        return "Invalid Data", 403
+
 @server.route("/")
 def index():
-    return "Bot is running smoothly!", 200
-
-def run_bot():
-    try:
-        bot.infinity_polling(none_stop=True, allowed_updates=['message', 'business_message', 'callback_query', 'business_connection'])
-    except Exception as e:
-        print(f"Polling error: {e}")
+    return "Bot is running smoothly with Webhook!", 200
 
 if __name__ == "__main__":
-    bot_thread = threading.Thread(target=run_bot)
-    bot_thread.daemon = True
-    bot_thread.start()
+    # আপনার রেন্ডার অ্যাপের মূল ইউআরএল এখানে বসাতে হবে (যেমন: https://your-app-name.onrender.com)
+    # রেন্ডারে ডিপ্লয় করার পর রেন্ডারের দেওয়া প্রোজেক্ট লিংকটি এখানে দিয়ে দেবেন অথবা নিচে অটো সেটআপ কোড ব্যবহার করতে পারেন:
+    
+    RENDER_URL = os.environ.get("RENDER_EXTERNAL_URL")
+    if RENDER_URL:
+        bot.remove_webhook()
+        bot.set_webhook(url=f"{RENDER_URL}/{TOKEN}", allowed_updates=['message', 'business_message', 'callback_query', 'business_connection'])
 
     server.run(host="0.0.0.0", port=int(os.environ.get('PORT', 5000)))
