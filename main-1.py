@@ -3,7 +3,7 @@ import telebot
 from flask import Flask, request
 import google.generativeai as genai
 
-TOKEN = "8982092821:AAHLdM9hpK2NZ2seTGUtSRDK3KbCf7Z5nDI"
+TOKEN = "8982092821:AAEsnO7Ejjt-dgrPvTInipztkRYwLAZ7D0g"
 GOOGLE_API_KEY = os.environ.get("GOOGLE_API_KEY")
 ADMIN_ID = 8345712050
 
