@@ -3,7 +3,7 @@ import telebot
 import google.generativeai as genai
 
 TOKEN = "8852512631:AAHOKThsAL20YzyLRpN-LaJb_C8RWysw5sc"
-GEMINI_API_KEY = os.environ.get("AQ.Ab8RN6JaDcD70BZD4LKIBkjrNpx7fYlBQ9cW-rA7eyymO_oOMQ")
+GEMINI_API_KEY = "AQ.Ab8RN6JaDcD70BZD4LKIBkjrNpx7fYlBQ9cW-rA7eyymO_oOMQ"
 ADMIN_ID = 8345712050
 
 genai.configure(api_key=GEMINI_API_KEY)
