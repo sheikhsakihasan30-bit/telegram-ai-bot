@@ -93,22 +93,19 @@ def send_broadcast(message):
 
     bot.send_message(ADMIN_ID, f"✅ ব্রডকাস্ট সম্পন্ন!\nসফল: {success_count} জন\nব্যর্থ: {fail_count} জন")
 
-# টেলিগ্রাম বিজনেস চ্যাটের ইনকামিং মেসেজ রিসিভ করার হ্যান্ডলার
+# টেলিগ্রাম বিজনেস মেসেজ হ্যান্ডলার
 @bot.business_message_handler(func=lambda message: True)
 def handle_business_message(message):
     global bot_active
     
     if not bot_active:
         return
-        
-    # যদি মেসেজটি অ্যাডমিন নিজে পাঠান, তবে বট রিপ্লাই করবে না
-    if message.from_user.id == ADMIN_ID:
-        return
 
     user_id = message.from_user.id
-    all_users.add(user_id)
-    user_text = message.text
+    if user_id != ADMIN_ID:
+        all_users.add(user_id)
 
+    user_text = message.text
     if not user_text:
         return
 
@@ -119,26 +116,24 @@ def handle_business_message(message):
         chat = user_chat_sessions[user_id]
         response = chat.send_message(user_text)
         
-        # বিজনেসের নির্দিষ্ট চ্যাটে উত্তর পাঠানোর জন্য message.chat.id ব্যবহার করা হয়েছে
+        # বিজনেসের চ্যাটে এআই রেসপন্স পাঠানো
         bot.send_message(message.chat.id, response.text)
     except Exception as e:
         print(f"Business AI Error: {e}")
 
-# সাধারণ ডাইরেক্ট বটের চ্যাটের জন্য
+# নরমাল চ্যাট হ্যান্ডলার
 @bot.message_handler(func=lambda message: True)
 def handle_normal_message(message):
     global bot_active
-    user_id = message.from_user.id
     
-    if user_id == ADMIN_ID:
-        return
-
     if not bot_active:
         return
 
-    all_users.add(user_id)
-    user_text = message.text
+    user_id = message.from_user.id
+    if user_id != ADMIN_ID:
+        all_users.add(user_id)
 
+    user_text = message.text
     if not user_text:
         return
 
