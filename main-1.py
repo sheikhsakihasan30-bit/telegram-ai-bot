@@ -3,12 +3,12 @@ import telebot
 from flask import Flask, request
 import google.generativeai as genai
 
-TOKEN = "8982092821:AAEsnO7Ejjt-dgrPvTInipztkRYwLAZ7D0g"
+TOKEN = "8628230178:AAERnZsaJRF9krfbcFMs3Gf0sr2JNg7i7gY"
 GOOGLE_API_KEY = os.environ.get("GOOGLE_API_KEY")
 ADMIN_ID = 8345712050
 
 genai.configure(api_key=GOOGLE_API_KEY)
-model = genai.GenerativeModel("gemini-1.5-flash-latest")
+model = genai.GenerativeModel("gemini-3.7-flash")
 
 
 bot = telebot.TeleBot(TOKEN)
